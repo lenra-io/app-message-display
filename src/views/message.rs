@@ -19,10 +19,33 @@ pub fn message(messages: Vec<Message>) -> Value {
 }
 
 pub fn message_list(messages: Vec<Message>) -> Value {
-    let children: Vec<Value> = messages
+    let mut children: Vec<Value> = messages
         .iter()
         .map(|message| message_card(message))
         .collect();
+    children.push(json!({
+        "type": "form",
+        "child": {
+          "type": "container",
+          "constraints": {
+            "maxWidth": 200
+          },
+          "child": {
+            "type": "textfield",
+            "value": "",
+            // "autofocus": children.is_empty(),
+            "name": "message",
+            "style": {
+              "decoration": {
+                "hintText": "New message"
+              }
+            },
+            "onSubmitted": {
+              "action": "newMessage"
+            }
+          }
+        }
+    }));
     json!({
         "type": "flex",
         "fillParent": true,
@@ -33,9 +56,9 @@ pub fn message_list(messages: Vec<Message>) -> Value {
 }
 
 fn message_card(message: &Message) -> Value {
-  let white:u32 = 0xFFFFFFFF;
-  let black:u32 = 0xFF000000;
-  let black_opacity:u32 = 0xAA000000;
+    let white: u32 = 0xFFFFFFFF;
+    let black: u32 = 0xFF000000;
+    let black_opacity: u32 = 0xAA000000;
     json!({
         "type": "actionnable",
         "onPressed": {

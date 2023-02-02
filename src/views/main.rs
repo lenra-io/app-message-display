@@ -5,9 +5,9 @@ pub fn main() -> Value {
     json!({
       "type": "flex",
       "direction": "vertical",
-      "scroll": true,
+      "fillParent": true,
       "spacing": 4,
-      "crossAxisAlignment": "center",
+      "crossAxisAlignment": "stretch",
       "children": [
         {
           "type": "flexible",
