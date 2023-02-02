@@ -1,3 +1,4 @@
+use crate::listeners::MESSAGE_COLLECTION;
 use serde_json::{json, Value};
 
 pub fn main() -> Value {
@@ -9,13 +10,22 @@ pub fn main() -> Value {
       "crossAxisAlignment": "center",
       "children": [
         {
-          "type": "view",
-          "name": "menu",
+          "type": "flexible",
+          "child":
+            {
+              "type": "view",
+              "name": "message",
+              "coll": MESSAGE_COLLECTION,
+              "query": {
+                "current": true
+              },
+            },
         },
         {
           "type": "view",
-          "name": "home"
-        }
+          "name": "messageList",
+          "coll": MESSAGE_COLLECTION
+        },
       ]
     })
 }

@@ -2,15 +2,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-    data::Counter,
-    views::{counter::counter, home::home, loading::loading, menu::menu, main::main},
+    data::Message,
+    views::{main::main, message::{message_list, message}},
 };
 
-mod counter;
-mod home;
-mod loading;
-mod menu;
 mod main;
+mod message;
 
 /** Unknown view request */
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -26,9 +23,8 @@ pub struct UnknownView {
 #[serde(tag = "view", rename_all = "camelCase")]
 pub enum View {
     Main(BaseView),
-    Menu(BaseView),
-    Home(BaseView),
-    Counter(CounterView),
+    Message(MessagesView),
+    MessageList(MessagesView),
 }
 
 impl View {
@@ -36,16 +32,8 @@ impl View {
         log::debug!("View: {:?}", self);
         let ret = match self {
             View::Main(_) => main(),
-            View::Menu(_) => menu(),
-            View::Home(_) => home(),
-            View::Counter(counter_view) => {
-                let counter_option = counter_view.data.get(0);
-                if let Some(c) = counter_option {
-                    return counter(c, counter_view.props.text.clone());
-                }
-
-                loading()
-            }
+            View::Message(view) => message(view.data.clone()),
+            View::MessageList(view) => message_list(view.data.clone()),
         };
         log::debug!("Return: {}", ret);
         ret
@@ -74,15 +62,10 @@ pub struct ScreenSize {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 #[serde(default)]
-pub struct CounterView {
-    pub data: Vec<Counter>,
-    pub props: CounterViewProps,
+pub struct MessagesView {
+    pub data: Vec<Message>,
+    pub props: Option<Value>,
     pub context: Option<Context>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct CounterViewProps {
-    text: String,
 }
 
 /** Lenra view padding */
@@ -115,11 +98,11 @@ pub struct Offset {
     dy: u16,
 }
 
-fn padding_symmetric(vertical: u16, horizontal: u16) -> Padding {
-    Padding {
-        top: vertical,
-        bottom: vertical,
-        left: horizontal,
-        right: horizontal,
-    }
-}
+// fn padding_symmetric(vertical: u16, horizontal: u16) -> Padding {
+//     Padding {
+//         top: vertical,
+//         bottom: vertical,
+//         left: horizontal,
+//         right: horizontal,
+//     }
+// }

@@ -1,12 +1,13 @@
+use core::time;
+use std::thread;
+
 // use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::Value;
 
-use crate::data::{service::Api, Counter};
+use crate::data::{service::Api, Message};
 
-pub const COUNTER_COLLECTION: &str = "counter";
-pub const GLOBAL_USER: &str = "global";
-pub const CURRENT_USER: &str = "@me";
+pub const MESSAGE_COLLECTION: &str = "message";
 
 /** Lenra listener request */
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
@@ -21,18 +22,16 @@ pub struct UnknownListener {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "action", rename_all = "camelCase")]
 pub enum Listener {
-    OnEnvStart(BaseListener),
-    OnUserFirstJoin(BaseListener),
-    Increment(Increment),
+    CurrentMessage(CurrentMessage),
+    NewMessage(NewMessage),
 }
 
 impl Listener {
     pub fn handle(&self) {
         log::debug!("Listener: {:?}", self);
         match self {
-            Listener::Increment(inc) => inc.handle(),
-            Listener::OnEnvStart(listener) => create_counter(&listener.api, GLOBAL_USER),
-            Listener::OnUserFirstJoin(listener) => create_counter(&listener.api, CURRENT_USER),
+            Listener::CurrentMessage(cm) => cm.handle(),
+            Listener::NewMessage(nm) => nm.handle(),
         }
     }
 }
@@ -52,39 +51,57 @@ trait ListenerHandler {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct Increment {
-    pub props: IncrementProps,
+pub struct IDProps {
+    id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+pub struct MessageEvent {
+    message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+pub struct CurrentMessage {
+    pub props: IDProps,
     pub event: Option<Value>,
     pub api: Api,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct IncrementProps {
-    id: String,
+pub struct NewMessage {
+    pub props: Option<Value>,
+    pub event: MessageEvent,
+    pub api: Api,
 }
 
 // #[async_trait]
-impl ListenerHandler for Increment {
+impl ListenerHandler for CurrentMessage {
     /* async */
     fn handle(&self) {
-        let mut counter: Counter = self
+        let mut counter: Message = self
             .api
-            .get_doc(COUNTER_COLLECTION, self.props.id.as_str())
+            .get_doc(MESSAGE_COLLECTION, self.props.id.as_str())
             .unwrap();
-        counter.count = counter.count + 1;
-        self.api.update_doc(COUNTER_COLLECTION, counter).unwrap();
+        counter.current = true;
+        counter = self.api.update_doc(MESSAGE_COLLECTION, counter).unwrap();
+        thread::sleep(time::Duration::from_secs(5));
+        counter.current = false;
+        self.api.update_doc(MESSAGE_COLLECTION, counter).unwrap();
     }
 }
-
-fn create_counter(api: &Api, user: &str) {
-    let res = api.create_doc(
-        COUNTER_COLLECTION,
-        json!({
-            "count": 0,
-            "user": user,
-        }),
-    );
-    if let Err(error) = res {
-        log::warn!("Error occured while creating the counter: {}", error);
+// #[async_trait]
+impl ListenerHandler for NewMessage {
+    /* async */
+    fn handle(&self) {
+        self.api
+            .create_doc(
+                MESSAGE_COLLECTION,
+                Message {
+                    id: None,
+                    text: self.event.message.clone(),
+                    current: false,
+                },
+            )
+            .unwrap();
     }
 }
