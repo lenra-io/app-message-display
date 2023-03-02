@@ -5,16 +5,20 @@ use crate::data::Message;
 pub fn message(messages: Vec<Message>) -> Value {
     let message_opt = messages.get(0);
     json!({
-      "type": "text",
-      "value": if let Some(message) = message_opt {
-        message.text.clone()
-      } else {
-        "".to_string()
-      },
-      "style": {
-        "fontWeight": "bold",
-        "fontSize": 100,
-      },
+      "type": "container",
+      "alignment": "center",
+      "child": {
+        "type": "text",
+        "value": if let Some(message) = message_opt {
+          message.text.clone()
+        } else {
+          "".to_string()
+        },
+        "style": {
+          "fontWeight": "bold",
+          "fontSize": 100,
+        },
+      }
     })
 }
 
