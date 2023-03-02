@@ -56,6 +56,11 @@ pub struct IDProps {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+pub struct Event<T> {
+    value: T,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct MessageEvent {
     message: String,
 }
@@ -70,7 +75,7 @@ pub struct CurrentMessage {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct NewMessage {
     pub props: Option<Value>,
-    pub event: MessageEvent,
+    pub event: Event<MessageEvent>,
     pub api: Api,
 }
 
@@ -84,7 +89,7 @@ impl ListenerHandler for CurrentMessage {
             .unwrap();
         counter.current = true;
         counter = self.api.update_doc(MESSAGE_COLLECTION, counter).unwrap();
-        thread::sleep(time::Duration::from_secs(5));
+        thread::sleep(time::Duration::from_secs(10));
         counter.current = false;
         self.api.update_doc(MESSAGE_COLLECTION, counter).unwrap();
     }
@@ -98,7 +103,7 @@ impl ListenerHandler for NewMessage {
                 MESSAGE_COLLECTION,
                 Message {
                     id: None,
-                    text: self.event.message.clone(),
+                    text: self.event.value.message.clone(),
                     current: false,
                 },
             )

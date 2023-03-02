@@ -26,24 +26,34 @@ pub fn message_list(messages: Vec<Message>) -> Value {
     children.push(json!({
         "type": "form",
         "child": {
-          "type": "container",
-          "constraints": {
-            "maxWidth": 200
-          },
-          "child": {
-            "type": "textfield",
-            "value": "",
-            // "autofocus": children.is_empty(),
-            "name": "message",
-            "style": {
-              "decoration": {
-                "hintText": "New message"
+          "type": "flex",
+          "children": [
+            {
+              "type": "container",
+              "constraints": {
+                "maxWidth": 200
+              },
+              "child": {
+                "type": "textfield",
+                "value": "",
+                // "autofocus": children.is_empty(),
+                "name": "message",
+                "style": {
+                  "decoration": {
+                    "hintText": "New message"
+                  }
+                }
               }
             },
-            "onSubmitted": {
-              "action": "newMessage"
+            {
+              "type": "button",
+              "text": "Add",
+              "submit": true,
             }
-          }
+          ]
+        },
+        "onSubmit": {
+          "action": "newMessage"
         }
     }));
     json!({
@@ -51,36 +61,45 @@ pub fn message_list(messages: Vec<Message>) -> Value {
         "fillParent": true,
         "mainAxisAlignment": "center",
         "crossAxisAlignment": "center",
+        "spacing": 16,
         "children": children
     })
 }
 
 fn message_card(message: &Message) -> Value {
     let white: u32 = 0xFFFFFFFF;
-    let black: u32 = 0xFF000000;
     let black_opacity: u32 = 0xAA000000;
     json!({
-        "type": "actionnable",
+        "type": "actionable",
         "onPressed": {
-
+          "action": "currentMessage",
+          "props": {
+            "id": message.id,
+          }
         },
         "child": {
           "type": "container",
+          "padding": {
+            "bottom": 8,
+            "left": 8,
+            "right": 8,
+            "top": 8,
+          },
           "border": {
             "bottom": {
-              "color": black,
+              "color": black_opacity,
               "width": 1,
             },
             "left": {
-              "color": black,
+              "color": black_opacity,
               "width": 1,
             },
             "right": {
-              "color": black,
+              "color": black_opacity,
               "width": 1,
             },
             "top": {
-              "color": black,
+              "color": black_opacity,
               "width": 1,
             }
           },
